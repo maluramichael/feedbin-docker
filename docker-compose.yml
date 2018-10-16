@@ -1,0 +1,91 @@
+version: '2.2'
+
+volumes:
+  feedbin_redis:
+  feedbin_db:
+  feedbin_elasticsearch:
+
+services:
+
+  feedbin:
+  image: thomas-illiet/feedbin
+  ports:
+    - 9292:9292/tcp
+  environment:
+    SECRET_KEY_BASE: '**changeme**'
+    AWS_ACCESS_KEY_ID: '**changeme**'
+    AWS_S3_BUCKET: '**changeme**'
+    AWS_SECRET_ACCESS_KEY: '**changeme**'
+    CAMO_HOST: '**changeme**'
+    CAMO_KEY: '**changeme**'
+    DATABASE_URL: postgres://feedbin:feedbin@postgres/feedbin_production
+    DEFAULT_URL_OPTIONS_HOST: feedbin.netboot.fr
+    ELASTICSEARCH_URL: http://elasticsearch:9200
+    FROM_ADDRESS: '**changeme**'
+    MEMCACHED_HOSTS: memcached:11211
+    POSTGRES_PASSWORD: feedbin
+    POSTGRES_USERNAME: feedbin
+    POSTGRES: postgres
+    PUSH_URL: http://**changeme**
+    RACK_ENV: production
+    RAILS_ENV: production
+    REDIS_URL: redis://redis:6379
+    SMTP_ADDRESS: '**changeme**'
+    SMTP_PASSWORD: '**changeme**'
+    SMTP_USERNAME: '**changeme**'
+  links:
+    - feedbin-redis:redis
+    - feedbin-postgres:postgres
+    - feedbin-elasticsearch:elasticsearch
+    - feedbin-memcached:memcached
+
+  feedbin-elasticsearch:
+    image: elasticsearch:2.4
+    ports:
+      - 9200:9200/tcp
+    volumes:
+      - feedbin_elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+
+  feedbin-refresher:
+    image: scavone/feedbin-refresher:latest
+    environment:
+      - REDIS_URL=redis://feedbin-redis:6379
+    links:
+      - feedbin-redis:feedbin-redis
+
+  camo:
+    image: inventid/camo
+    environment:
+      - CAMO_KEY=**changeme**
+      - CAMO_HOSTNAME=**changeme**
+    expose:
+      - 8081
+
+  feedbin-memcached:
+    image: memcached:latest
+    restart: always
+
+  feedbin-redis:
+    image: redis:latest
+    command: "redis-server --appendonly yes"
+    volumes:
+      - feedbin_redis:/data
+    restart: always
+
+  feedbin-postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=feedbin
+      - POSTGRES_USER=feedbin
+    volumes:
+      - feedbin_db:/var/lib/postgresql/data
+    restart: always
