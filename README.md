@@ -39,7 +39,7 @@ I build daily images of feedbin, you have 4 type of release
 * **Weekly** : Every sunday
 * **Monthly** : Every month
 
-And on the latest build, i add latest git head in docker tag :)
+And on the latest build, i added latest git head in docker tag :)
 
 ## Contributing
 
