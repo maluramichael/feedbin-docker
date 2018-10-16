@@ -40,6 +40,7 @@ pipeline {
         }
         stage('Docker push - Latest') {
             agent { label 'SRV-DOCKER-DEV' }
+            when { expression { getJobCause() == 'timer' || getJobCause() == 'pushtomaster' } }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
@@ -53,7 +54,7 @@ pipeline {
 
         stage('Docker push - Weekly') {
             agent { label 'SRV-DOCKER-DEV' }
-            when { expression { dayOfWeek() == '7' } }
+            when { expression { dayOfWeek() == '7' && getJobCause() == 'timer' } }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
@@ -66,7 +67,7 @@ pipeline {
 
         stage('Docker push - Monthly') {
             agent { label 'SRV-DOCKER-DEV' }
-            when { expression { dayOfMonth() == '1' } }
+            when { expression { dayOfMonth() == '1' && getJobCause() == 'timer' } }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
@@ -88,4 +89,38 @@ def dayOfWeek() {
 def dayOfMonth() {
     String d = sh(returnStdout: true, script: 'date +%d')
     return d.trim()
+}
+
+@NonCPS
+def getJobCause() {
+  def jobCause = ''
+  def buildCauses = currentBuild.rawBuild.getCauses()
+  for ( buildCause in buildCauses ) {
+    if (buildCause != null) {
+      def causeProperties = buildCause.getProperties()
+      if (causeProperties =~ /Started by user/) {
+        jobCause = 'user'
+      }
+      if (causeProperties =~ /Started by timer/) {
+        jobCause = 'timer'
+      }
+        if (causeProperties =~ /Started by an SCM change/) {
+        jobCause = 'scm'
+      }
+      if (causeProperties =~ /Started by upstream/) {
+        jobCause = 'upstream'
+      }
+      if (causeProperties =~ /Push event to branch master/) {
+        jobCause = 'pushtomaster'
+      }
+      if (causeProperties =~ /Push event to branch unstable/) {
+        jobCause = 'pushtounstable'
+      } else {
+        echo "cause properties: ${causeProperties}"
+      }
+    } else {
+    }
+  }
+  echo "jobCause: ${jobCause}"
+  return jobCause
 }
