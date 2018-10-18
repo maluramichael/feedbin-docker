@@ -1,7 +1,6 @@
-
 # Freedbin 🍔
 
-[![Build Status](https://ci.netboot.fr/buildStatus/icon?job=thomas-illiet/feedbin-docker/master)](https://ci.netboot.fr/job/thomas-illiet/job/feedbin-docker/job/master/)
+[![Build status][jenkins-badge]][jenkins-build]
 
 [Feedbin](https://github.com/feedbin/feedbin) is a simple, fast and nice looking RSS reader - this fork provides a version intended for users who want to host their own copy of it for free, that can be run anywhere with Docker.
 
@@ -44,3 +43,6 @@ And on the latest build, i added latest git head in docker tag :)
 ## Contributing
 
 Feel free to file PRs for features or fixes you think are specifically useful to the self-hosted version, but if it's generally applicable then contribute to the original Feedbin project which will be merged into this fork periodically.
+
+[jenkins-badge]: https://ci.netboot.fr/job/thomas-illiet/job/feedbin-docker/job/master/badge/icon
+[jenkins-build]: https://ci.netboot.fr/blue/organizations/jenkins/thomas-illiet%2Ffeedbin-docker/activity?branch=master
