@@ -1,6 +1,7 @@
 pipeline {
     agent { label 'SRV-DOCKER-DEV' }
     stages {
+
         stage('Init'){
             agent { label 'SRV-DOCKER-DEV' }
             steps {
@@ -10,8 +11,8 @@ pipeline {
                 deleteDir()
             }
         }
+
         stage('Checkout'){
-            agent { label 'SRV-DOCKER-DEV' }
             steps {
                 // GIT submodule recursive checkout
                 checkout scm: [
@@ -29,8 +30,8 @@ pipeline {
                 ]
             }
         }
+
         stage('Docker build') {
-            agent { label 'SRV-DOCKER-DEV' }
             steps {
                 echo 'Starting to build docker image'
                 script {
@@ -38,23 +39,21 @@ pipeline {
                 }
             }
         }
-        stage('Docker push - Latest') {
-            agent { label 'SRV-DOCKER-DEV' }
-            when { expression { getJobCause() == 'timer' || getJobCause() == 'pushtomaster' } }
+
+        stage('Docker push Latest') {
+            when { expression { conditionalBuild('Daily') == true } }
             steps {
                 script {
-                    commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
                     docker.withRegistry('https://registry.hub.docker.com', 'ca19e01b-db1a-43a3-adc4-46dafe13fea2') {
                         app.push("latest")
-                        app.push(commitId)
+                        app.push( getRemoteCommitID() )
                     }
                 }
             }
         }
 
-        stage('Docker push - Weekly') {
-            agent { label 'SRV-DOCKER-DEV' }
-            when { expression { dayOfWeek() == '7' && getJobCause() == 'timer' } }
+        stage('Docker push Weekly') {
+            when { expression { conditionalBuild('Weekly') == true } }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
@@ -65,9 +64,8 @@ pipeline {
             }
         }
 
-        stage('Docker push - Monthly') {
-            agent { label 'SRV-DOCKER-DEV' }
-            when { expression { dayOfMonth() == '1' && getJobCause() == 'timer' } }
+        stage('Docker push Monthly') {
+            when { expression { conditionalBuild('Monthly') == true } }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
@@ -78,17 +76,87 @@ pipeline {
             }
         }
 
+        stage('Update CommitID') {
+            when { expression { conditionalBuild('Daily') == true } }
+            environment {
+                remoteCommitID = getRemoteCommitID()
+            }
+            steps {
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'd6aed6d5-8b11-483b-8651-fedada6e1a64', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                    sh 'echo $remoteCommitID > CurrentCommitID'
+                    sh 'git add CurrentCommitID'
+                    sh 'git config user.email "contact@thomas-illiet.fr"'
+                    sh 'git commit -m ":wrench: Update current commit ID to $remoteCommitID"'
+                    sh 'git config --global push.default simple'
+                    sh 'git push https://$USERNAME:$PASSWORD@github.com/thomas-illiet/feedbin-docker.git HEAD:master'
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    currentCommitID = getRemoteCommitID()
+                    sh("docker rmi -f ruby:2.3")
+                    sh("docker rmi -f registry.hub.docker.com/thomasilliet/feedbin:latest")
+                    sh("docker rmi -f registry.hub.docker.com/thomasilliet/feedbin:monthly")
+                    sh("docker rmi -f registry.hub.docker.com/thomasilliet/feedbin:weekly")
+                    sh("docker rmi -f registry.hub.docker.com/thomasilliet/feedbin:$currentCommitID")
+                    sh("docker rmi -f thomasilliet/feedbin:${env.BUILD_ID}")
+                    deleteDir()
+                    cleanWs()
+                }
+            }
+        }
+
     }
 }
 
-def dayOfWeek() {
-    String u = sh(returnStdout: true, script: 'date +%u')
-    return u.trim()
+def conditionalBuild (BuildType) {
+    jobCause = getJobCause()
+    if ( getRemoteCommitID() != getLocalCommitID() ) {
+        switch(BuildType) {
+            case "Weekly":
+                dayOfWeek = sh(returnStdout: true, script: 'date +%u').trim()
+                if( ( jobCause == 'timer' || jobCause == 'pushtomaster' ) && dayOfWeek == '7' ) {
+                    return true
+                } else {
+                    return false
+                }
+                break
+            case "Monthly":
+                dayOfMonth = sh(returnStdout: true, script: 'date +%d').trim()
+                echo "dayofmonth : ${dayOfMonth}"
+                if( ( jobCause == 'timer' || jobCause == 'pushtomaster' ) && dayOfMonth == '1' ) {
+                    return true
+                } else {
+                    return false
+                }
+                break
+            case "Daily":
+                if( jobCause == 'timer' || jobCause == 'pushtomaster' ) {
+                    return true
+                } else {
+                    return false
+                }
+                break
+            default:
+                echo "Unable to find a valid BuildType"
+                return false
+        }
+    } else {
+        return false
+    }
 }
 
-def dayOfMonth() {
-    String d = sh(returnStdout: true, script: 'date +%d')
-    return d.trim()
+
+
+def getRemoteCommitID() {
+    return sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
+}
+
+def getLocalCommitID() {
+    return sh(returnStdout: true, script: 'cat CurrentCommitID')
 }
 
 @NonCPS
