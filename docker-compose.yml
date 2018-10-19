@@ -82,7 +82,7 @@ services:
     restart: always
 
   feedbin-postgres:
-    image: postgres:latest
+    image: postgres:10
     environment:
       - POSTGRES_PASSWORD=feedbin
       - POSTGRES_USER=feedbin
