@@ -44,5 +44,5 @@ And on the latest build, i added latest git head in docker tag :)
 
 Feel free to file PRs for features or fixes you think are specifically useful to the self-hosted version, but if it's generally applicable then contribute to the original Feedbin project which will be merged into this fork periodically.
 
-[jenkins-badge]: https://ci.netboot.fr/job/thomas-illiet/job/feedbin-docker/job/master/badge/icon
+[jenkins-badge]: https://ci.netboot.fr/buildStatus/icon?job=thomas-illiet/feedbin-docker/master
 [jenkins-build]: https://ci.netboot.fr/blue/organizations/jenkins/thomas-illiet%2Ffeedbin-docker/activity?branch=master
