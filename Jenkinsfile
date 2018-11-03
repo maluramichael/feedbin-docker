@@ -24,7 +24,7 @@ pipeline {
                                       parentCredentials: false,
                                       recursiveSubmodules: true,
                                       reference: '',
-                                      trackingSubmodules: false]],
+                                      trackingSubmodules: true]],
                         submoduleCfg: [],
                         userRemoteConfigs: scm.userRemoteConfigs
                 ]
@@ -84,6 +84,7 @@ pipeline {
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'd6aed6d5-8b11-483b-8651-fedada6e1a64', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh 'echo $remoteCommitID > CurrentCommitID'
+                    sh 'git add app'
                     sh 'git add CurrentCommitID'
                     sh 'git config user.email "contact@thomas-illiet.fr"'
                     sh 'git commit -m ":wrench: Update current commit ID to $remoteCommitID"'
