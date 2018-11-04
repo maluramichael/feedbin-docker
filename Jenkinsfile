@@ -1,3 +1,5 @@
+def updated=false
+
 pipeline {
     agent { label 'SRV-DOCKER-DEV' }
     stages {
@@ -42,50 +44,66 @@ pipeline {
 
         stage('Docker push Latest') {
             when { expression { conditionalBuild('Daily') == true } }
+            environment {
+                remoteCommitID = getRemoteCommitID()
+            }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'ca19e01b-db1a-43a3-adc4-46dafe13fea2') {
                         app.push("latest")
                         app.push( getRemoteCommitID() )
                     }
+                    sh 'echo $remoteCommitID > CurrentCommitIDDaily'
+                    sh 'git add CurrentCommitIDDaily'
+                    updated = true
                 }
             }
         }
 
         stage('Docker push Weekly') {
             when { expression { conditionalBuild('Weekly') == true } }
+            environment {
+                remoteCommitID = getRemoteCommitID()
+            }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
                     docker.withRegistry('https://registry.hub.docker.com', 'ca19e01b-db1a-43a3-adc4-46dafe13fea2') {
                         app.push("weekly")
                     }
+                    sh 'echo $remoteCommitID > CurrentCommitIDWeekly'
+                    sh 'git add CurrentCommitIDWeekly'
+                    updated = true
                 }
             }
         }
 
         stage('Docker push Monthly') {
             when { expression { conditionalBuild('Monthly') == true } }
+            environment {
+                remoteCommitID = getRemoteCommitID()
+            }
             steps {
                 script {
                     commitId = sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
                     docker.withRegistry('https://registry.hub.docker.com', 'ca19e01b-db1a-43a3-adc4-46dafe13fea2') {
                         app.push("monthly")
                     }
+                    sh 'echo $remoteCommitID > CurrentCommitIDMonthly'
+                    sh 'git add CurrentCommitIDMonthly'
+                    updated = true
                 }
             }
         }
 
-        stage('Update CommitID') {
-            when { expression { conditionalBuild('Daily') == true } }
+        stage('Update Repository') {
+            when { expression { updated == true } }
             environment {
                 remoteCommitID = getRemoteCommitID()
             }
             steps {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'd6aed6d5-8b11-483b-8651-fedada6e1a64', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                    sh 'echo $remoteCommitID > CurrentCommitID'
                     sh 'git add app'
-                    sh 'git add CurrentCommitID'
                     sh 'git config user.email "contact@thomas-illiet.fr"'
                     sh 'git commit -m ":wrench: Update current commit ID to $remoteCommitID"'
                     sh 'git config --global push.default simple'
@@ -115,7 +133,7 @@ pipeline {
 
 def conditionalBuild (BuildType) {
     jobCause = getJobCause()
-    if ( getRemoteCommitID() != getLocalCommitID() ) {
+    if ( getRemoteCommitID() != getLocalCommitID(BuildType) ) {
         switch(BuildType) {
             case "Weekly":
                 dayOfWeek = sh(returnStdout: true, script: 'date +%u').trim()
@@ -156,8 +174,15 @@ def getRemoteCommitID() {
     return sh(returnStdout: true, script: 'cd app ; git rev-parse HEAD')
 }
 
-def getLocalCommitID() {
-    return sh(returnStdout: true, script: 'cat CurrentCommitID')
+def getLocalCommitID(Type) {
+    switch(Type) {
+        case "Weekly":
+            return sh(returnStdout: true, script: "cat CurrentCommitIDWeekly")
+        case "Monthly":
+            return sh(returnStdout: true, script: "cat CurrentCommitIDMonthly")
+        case "Daily":
+            return sh(returnStdout: true, script: "cat CurrentCommitIDDaily")
+    }
 }
 
 @NonCPS
