@@ -1,11 +1,10 @@
 def updated=false
 
 pipeline {
-    agent { label 'SRV-DOCKER-DEV' }
+    agent { label 'docker' }
     stages {
 
         stage('Init'){
-            agent { label 'SRV-DOCKER-DEV' }
             steps {
                 script {
                     properties([pipelineTriggers([cron('@daily'), [$class: 'PeriodicFolderTrigger', interval: '1d']]), [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10']]])
@@ -102,7 +101,7 @@ pipeline {
                 remoteCommitID = getRemoteCommitID()
             }
             steps {
-                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'd6aed6d5-8b11-483b-8651-fedada6e1a64', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: '3aee892e-a486-4937-b2f7-205ce4606980', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh 'git add app'
                     sh 'git config user.email "contact@thomas-illiet.fr"'
                     sh 'git commit -m ":wrench: Update current commit ID to $remoteCommitID"'
