@@ -42,7 +42,7 @@ pipeline {
         }
 
         stage('Docker push Latest') {
-            when { expression { conditionalBuild('Daily') == true } }
+            //when { expression { conditionalBuild('Daily') == true } }
             environment {
                 remoteCommitID = getRemoteCommitID()
             }
