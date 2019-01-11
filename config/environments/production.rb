@@ -8,7 +8,7 @@ Rails.application.configure do
   # your application in memory, allowing both threaded web servers
   # and those relying on copy on write to perform better.
   # Rake tasks automatically ignore this option for performance.
-  config.eager_load = false
+  config.eager_load = true
 
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local = false
@@ -21,7 +21,7 @@ Rails.application.configure do
 
   # Disable serving static files from the `/public` folder by default since
   # Apache or NGINX already handles this.
-  # REMOVED config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present?
+  config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present?
 
   # Compress JavaScripts and CSS.
   config.assets.js_compressor = :uglifier
@@ -33,7 +33,7 @@ Rails.application.configure do
   # `config.assets.precompile` and `config.assets.version` have moved to config/initializers/assets.rb
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # REMOVED config.action_controller.asset_host = ENV["ASSET_HOST"]
+  # config.action_controller.asset_host = ENV["ASSET_HOST"]
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = 'X-Sendfile' # for Apache
@@ -46,8 +46,7 @@ Rails.application.configure do
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = false
-  # REMOVED config.force_ssl = true
-  # REMOVED config.ssl_options = {hsts: {subdomains: false}}
+  # config.ssl_options = {hsts: {subdomains: false}}
 
   # Less verbose logs
   config.lograge.enabled = true
@@ -70,7 +69,9 @@ Rails.application.configure do
   config.log_tags = [:subdomain, :uuid]
 
   # Use a different cache store in production.
-  config.cache_store = :dalli_store, ENV["MEMCACHED_HOSTS"].split(",")
+  if ENV["MEMCACHED_HOSTS"]
+    config.cache_store = :dalli_store, ENV["MEMCACHED_HOSTS"].split(",")
+  end
 
   # Use a real queuing backend for Active Job (and separate queues per environment)
   # config.active_job.queue_adapter     = :resque
@@ -83,7 +84,7 @@ Rails.application.configure do
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
-  config.i18n.fallbacks = true
+  config.i18n.fallbacks = [I18n.default_locale]
 
   # Send deprecation notices to registered listeners.
   config.active_support.deprecation = :notify
