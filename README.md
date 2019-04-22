@@ -11,7 +11,7 @@
 
 ## Installation
 
-* `wget https://raw.githubusercontent.com/thomas-illiet/freedbin/master/docker-compose.yml`
+* `wget https://raw.githubusercontent.com/thomas-illiet/feedbin-docker/master/docker-compose.yml`
   * Set config values in the `docker-compose.yml` file
   * `SECRET_KEY_BASE` - Rails Secret Key which needs to be set for security reasons
 * `docker-compose up`
