@@ -8,36 +8,36 @@ volumes:
 services:
 
   feedbin:
-  image: thomas-illiet/feedbin
-  ports:
-    - 9292:9292/tcp
-  environment:
-    SECRET_KEY_BASE: '**changeme**'
-    AWS_ACCESS_KEY_ID: '**changeme**'
-    AWS_S3_BUCKET: '**changeme**'
-    AWS_SECRET_ACCESS_KEY: '**changeme**'
-    CAMO_HOST: '**changeme**'
-    CAMO_KEY: '**changeme**'
-    DATABASE_URL: postgres://feedbin:feedbin@postgres/feedbin_production
-    DEFAULT_URL_OPTIONS_HOST: feedbin.netboot.fr
-    ELASTICSEARCH_URL: http://elasticsearch:9200
-    FROM_ADDRESS: '**changeme**'
-    MEMCACHED_HOSTS: memcached:11211
-    POSTGRES_PASSWORD: feedbin
-    POSTGRES_USERNAME: feedbin
-    POSTGRES: postgres
-    PUSH_URL: http://**changeme**
-    RACK_ENV: production
-    RAILS_ENV: production
-    REDIS_URL: redis://redis:6379
-    SMTP_ADDRESS: '**changeme**'
-    SMTP_PASSWORD: '**changeme**'
-    SMTP_USERNAME: '**changeme**'
-  links:
-    - feedbin-redis:redis
-    - feedbin-postgres:postgres
-    - feedbin-elasticsearch:elasticsearch
-    - feedbin-memcached:memcached
+    image: thomas-illiet/feedbin
+    ports:
+      - 9292:9292/tcp
+    environment:
+      SECRET_KEY_BASE: '**changeme**'
+      AWS_ACCESS_KEY_ID: '**changeme**'
+      AWS_S3_BUCKET: '**changeme**'
+      AWS_SECRET_ACCESS_KEY: '**changeme**'
+      CAMO_HOST: '**changeme**'
+      CAMO_KEY: '**changeme**'
+      DATABASE_URL: postgres://feedbin:feedbin@postgres/feedbin_production
+      DEFAULT_URL_OPTIONS_HOST: feedbin.netboot.fr
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      FROM_ADDRESS: '**changeme**'
+      MEMCACHED_HOSTS: memcached:11211
+      POSTGRES_PASSWORD: feedbin
+      POSTGRES_USERNAME: feedbin
+      POSTGRES: postgres
+      PUSH_URL: http://**changeme**
+      RACK_ENV: production
+      RAILS_ENV: production
+      REDIS_URL: redis://redis:6379
+      SMTP_ADDRESS: '**changeme**'
+      SMTP_PASSWORD: '**changeme**'
+      SMTP_USERNAME: '**changeme**'
+    links:
+      - feedbin-redis:redis
+      - feedbin-postgres:postgres
+      - feedbin-elasticsearch:elasticsearch
+      - feedbin-memcached:memcached
 
   feedbin-elasticsearch:
     image: elasticsearch:2.4
